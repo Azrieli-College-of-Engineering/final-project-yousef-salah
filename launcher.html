@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSWSH Project Launcher</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b, #334155);
+      color: white;
+    }
+
+    .card {
+      text-align: center;
+      background: rgba(15, 23, 42, 0.92);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      width: 100%;
+      max-width: 560px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 32px;
+    }
+
+    p {
+      color: #cbd5e1;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .buttons {
+      display: grid;
+      gap: 14px;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+    }
+
+    .vulnerable {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .secure {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .attacker {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .small {
+      margin-top: 18px;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>CSWSH Demo Launcher</h1>
+    <p>
+      Choose which part of the project you want to open.
+    </p>
+
+    <div class="buttons">
+      <a href="http://localhost:3000/login" target="_blank" rel="noopener">
+        <button class="vulnerable">Open Vulnerable App</button>
+      </a>
+
+      <a href="http://localhost:5000/login" target="_blank" rel="noopener">
+        <button class="secure">Open Secure App</button>
+      </a>
+
+      <a href="http://localhost:4000" target="_blank" rel="noopener">
+        <button class="attacker">Open Attacker Page</button>
+      </a>
+    </div>
+
+    <div class="small">
+      Make sure all servers are already running.
+    </div>
+  </div>
+</body>
+</html>

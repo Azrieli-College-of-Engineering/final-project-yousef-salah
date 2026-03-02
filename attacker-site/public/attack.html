@@ -74,20 +74,29 @@
       word-break: break-word;
     }
 
+    select,
     textarea {
       width: 100%;
-      min-height: 110px;
       padding: 14px;
       border-radius: 14px;
       border: 1px solid #7f1d1d;
       background: #111827;
       color: #fff7ed;
       font-size: 15px;
-      resize: vertical;
       outline: none;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
       margin-bottom: 14px;
     }
 
+    select {
+      margin-bottom: 0;
+    }
+
+    select:focus,
     textarea:focus {
       border-color: #ef4444;
       box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14);
@@ -153,7 +162,15 @@
 
     <div class="panel">
       <div class="label">Target WebSocket</div>
-      <div class="value">ws://localhost:3000/ws</div>
+      <select id="targetSelect">
+        <option value="ws://localhost:3000/ws">Vulnerable App - Port 3000</option>
+        <option value="ws://localhost:5000/ws">Secure App - Port 5000</option>
+      </select>
+    </div>
+
+    <div class="panel">
+      <div class="label">Selected target</div>
+      <div class="value" id="targetValue">ws://localhost:3000/ws</div>
     </div>
 
     <div class="panel">
@@ -161,9 +178,9 @@
       <textarea id="payload">This message was sent from the attacker page.</textarea>
 
       <div class="actions">
-        <button class="connect-btn" id="connectBtn">Connect</button>
-        <button class="send-btn" id="sendBtn">Send Attack Message</button>
-        <button class="close-btn" id="closeBtn">Close Socket</button>
+        <button type="button" class="connect-btn" id="connectBtn">Connect</button>
+        <button type="button" class="send-btn" id="sendBtn">Send Attack Message</button>
+        <button type="button" class="close-btn" id="closeBtn">Close Socket</button>
       </div>
     </div>
 
@@ -175,6 +192,8 @@
 
   <script>
     const originValue = document.getElementById('originValue');
+    const targetSelect = document.getElementById('targetSelect');
+    const targetValue = document.getElementById('targetValue');
     const payloadInput = document.getElementById('payload');
     const logEl = document.getElementById('log');
     const connectBtn = document.getElementById('connectBtn');
@@ -185,6 +204,10 @@
 
     originValue.textContent = window.location.origin;
 
+    function updateTargetLabel() {
+      targetValue.textContent = targetSelect.value;
+    }
+
     function log(message) {
       const time = new Date().toLocaleTimeString();
       logEl.textContent += `[${time}] ${message}\n`;
@@ -192,24 +215,31 @@
     }
 
     function connectSocket() {
+      const targetUrl = targetSelect.value;
+
       if (socket && socket.readyState === WebSocket.OPEN) {
         log('Socket is already connected.');
         return;
       }
 
-      log('Trying to open WebSocket to ws://localhost:3000/ws ...');
-      socket = new WebSocket('ws://localhost:3000/ws');
+      if (socket && socket.readyState === WebSocket.CONNECTING) {
+        log('Socket is already connecting.');
+        return;
+      }
+
+      log(`Trying to open WebSocket to ${targetUrl} ...`);
+      socket = new WebSocket(targetUrl);
 
       socket.addEventListener('open', () => {
-        log('WebSocket opened successfully.');
+        log(`WebSocket opened successfully to ${targetUrl}.`);
       });
 
       socket.addEventListener('message', (event) => {
         log(`Received: ${event.data}`);
       });
 
-      socket.addEventListener('close', () => {
-        log('WebSocket closed.');
+      socket.addEventListener('close', (event) => {
+        log(`WebSocket closed. Code: ${event.code}${event.reason ? `, Reason: ${event.reason}` : ''}`);
       });
 
       socket.addEventListener('error', () => {
@@ -229,7 +259,7 @@
       };
 
       socket.send(JSON.stringify(payload));
-      log(`Sent payload: ${JSON.stringify(payload)}`);
+      log(`Sent payload to ${targetSelect.value}: ${JSON.stringify(payload)}`);
     }
 
     function closeSocket() {
@@ -238,12 +268,23 @@
         return;
       }
 
+      if (
+        socket.readyState === WebSocket.CLOSING ||
+        socket.readyState === WebSocket.CLOSED
+      ) {
+        log('Socket is already closing or closed.');
+        return;
+      }
+
       socket.close();
     }
 
+    targetSelect.addEventListener('change', updateTargetLabel);
     connectBtn.addEventListener('click', connectSocket);
     sendBtn.addEventListener('click', sendAttackMessage);
     closeBtn.addEventListener('click', closeSocket);
+
+    updateTargetLabel();
   </script>
 </body>
 </html>
